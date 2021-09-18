@@ -67,7 +67,7 @@ const AddressBook = () => {
             name="search"
             placeholder="Search..."
           />
-          <Button color="blue" attached="right">
+          <Button color="blue" attached="right" onClick={handleSubmit}>
             <Icon name="search" />
           </Button>
         </div>

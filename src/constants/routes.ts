@@ -3,6 +3,7 @@ import AddressBook from "../views/AddressBook";
 import Contact from "../views/Contact";
 import ContactDetails from "../views/ContactDetails";
 import FavoritedAddressBook from "../views/FavoritedAddressBook";
+import Homepage from "../views/Homepage";
 import Login from "../views/Login";
 import NotFound from "../views/NotFound";
 
@@ -14,6 +15,7 @@ export interface IRoute {
 }
 
 interface IRoutes {
+  homepage: IRoute;
   login: IRoute;
   addressBook: IRoute;
   favoritedAddressBook: IRoute;
@@ -24,6 +26,12 @@ interface IRoutes {
 }
 
 const routes: IRoutes = {
+  homepage: {
+    component: Homepage,
+    href: "/",
+    name: "Homepage",
+    protected: false,
+  },
   login: {
     component: Login,
     href: "/login",
