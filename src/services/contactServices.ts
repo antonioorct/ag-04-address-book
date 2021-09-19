@@ -1,86 +1,57 @@
 import "../constants/firebase";
 import { get, push, set } from "firebase/database";
-import { IContact } from "../constants/types";
+import {
+  IContact,
+  IContactCountOptions,
+  IContactObject,
+  IContactQueryOptions,
+} from "../constants/types";
 import { contactDatabaseRef, contactsDatabaseRef } from "../constants/firebase";
 
 export const getAllContacts = async (
-  limit: number,
-  offset: number,
-  searchTerm: string
+  options?: IContactQueryOptions
 ): Promise<IContact[]> => {
   const contacts = await get(contactsDatabaseRef);
 
-  // Converts the queried database object to an array of objects
-  const contactArray: IContact[] = contactsToArray(contacts.val());
+  let contactArray: IContact[] = contactsToArray(contacts.val());
 
-  return filterContacts(contactArray, searchTerm).slice(
-    offset * limit,
-    offset * limit + limit
-  );
-};
+  if (!options) return contactArray;
+  else {
+    const { limit, offset, searchTerm, favoritesOnly } = options;
 
-export const getFavoritedContacts = async (
-  limit: number,
-  offset: number,
-  searchTerm: string
-): Promise<IContact[]> => {
-  const contacts = await get(contactsDatabaseRef);
+    if (searchTerm) contactArray = filterContacts(contactArray, searchTerm);
+    if (favoritesOnly)
+      contactArray = contactArray.filter((contact) => contact.favorited);
 
-  // Converts the queried database object to an array of objects
-  const contactArray: IContact[] = contactsToArray(contacts.val());
-
-  return filterContacts(contactArray, searchTerm)
-    .filter((contact) => contact.favorited)
-    .slice(offset * limit, offset * limit + limit);
+    return contactArray.slice(offset * limit, offset * limit + limit);
+  }
 };
 
 export const getContactById = async (id: string): Promise<IContact | null> => {
   const contact = await get(contactDatabaseRef(id));
 
-  return contact.val();
+  return { id, ...contact.val() };
 };
 
-export const createContact = async (
-  contact: Omit<IContact, "id" | "favorited">
-): Promise<string | null> => {
-  const newPostRef = push(contactsDatabaseRef);
-
-  await set(newPostRef, { ...contact, favorited: false });
-
-  return newPostRef.key;
-};
-
-export const updateContact = async (
-  id: string,
-  contact: IContact
-): Promise<void> => await set(contactDatabaseRef(id), contact);
-
-export const deleteContact = async (id: string) =>
-  await set(contactDatabaseRef(id), null);
-
-export const countContacts = async (searchTerm: string): Promise<number> => {
-  const contacts = await get(contactsDatabaseRef);
-
-  // Returns the length of the contact object's keys array
-  // queried from the database
-  const contactArray: IContact[] = contactsToArray(contacts.val());
-  return filterContacts(contactArray, searchTerm).length;
-};
-
-export const countFavoritedContacts = async (
-  searchTerm: string
+export const countContacts = async (
+  options?: IContactCountOptions
 ): Promise<number> => {
   const contacts = await get(contactsDatabaseRef);
+  let contactArray: IContact[] = contactsToArray(contacts.val());
 
-  // Returns the length of the contact object's keys array
-  // queried from the database
-  const contactArray: IContact[] = contactsToArray(contacts.val());
-  return filterContacts(contactArray, searchTerm).filter(
-    (contact) => contact.favorited
-  ).length;
+  if (options) {
+    const { searchTerm, favoritesOnly } = options;
+
+    if (searchTerm) contactArray = filterContacts(contactArray, searchTerm);
+    if (favoritesOnly)
+      contactArray = contactArray.filter((contact) => contact.favorited);
+  }
+
+  return contactArray.length;
 };
 
-export const contactsToArray = (contacts: any): IContact[] =>
+// Convert the queried database object to an array
+export const contactsToArray = (contacts: IContactObject): IContact[] =>
   Object.keys(contacts).map((key) => ({
     id: key,
     ...contacts[key],
@@ -89,16 +60,29 @@ export const contactsToArray = (contacts: any): IContact[] =>
 const SEARCH_FIELDS = ["firstName", "lastName", "contact"];
 export const filterContacts = (
   contacts: IContact[],
-  filter: string
+  searchTerm: string
 ): IContact[] =>
   contacts.filter((contact) =>
     SEARCH_FIELDS.some((field) => {
       const value = contact[field as keyof IContact];
 
       if (typeof value !== "string") return false;
-      // if (field === "contact" && contact.type === "E-mail")
-      //   value.toLowerCase().includes(filter.toLowerCase());
-
-      return value.toLowerCase().includes(filter.toLowerCase());
+      return value.toLowerCase().includes(searchTerm.toLowerCase());
     })
   );
+
+export const createContact = async (
+  contact: Omit<IContact, "id" | "favorited">
+): Promise<string | null> => {
+  const newContactRef = push(contactsDatabaseRef);
+
+  await set(newContactRef, { ...contact, favorited: false });
+
+  return newContactRef.key;
+};
+
+export const updateContact = async (contact: IContact): Promise<void> =>
+  await set(contactDatabaseRef(contact.id), contact);
+
+export const deleteContact = async (id: string) =>
+  await set(contactDatabaseRef(id), null);

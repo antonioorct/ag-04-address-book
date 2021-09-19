@@ -2,7 +2,6 @@ import { FC } from "react";
 import AddressBook from "../views/AddressBook";
 import Contact from "../views/Contact";
 import ContactDetails from "../views/ContactDetails";
-import FavoritedAddressBook from "../views/FavoritedAddressBook";
 import Homepage from "../views/Homepage";
 import Login from "../views/Login";
 import NotFound from "../views/NotFound";
@@ -45,7 +44,7 @@ const routes: IRoutes = {
     protected: true,
   },
   favoritedAddressBook: {
-    component: FavoritedAddressBook,
+    component: AddressBook,
     href: "/adresar/omiljeni",
     name: "Favorited address book",
     protected: true,

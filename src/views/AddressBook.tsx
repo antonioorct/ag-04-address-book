@@ -1,5 +1,5 @@
 import { ChangeEvent, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button, Container, Form, Icon, Input } from "semantic-ui-react";
 import AddressTable from "../components/AddressTable";
 import routes from "../constants/routes";
@@ -17,25 +17,44 @@ const AddressBook = () => {
   const [maxContactsPerPage, setMaxContactsPerPage] = useState(15);
   const [search, setSearch] = useState("");
 
+  const location = useLocation();
+
+  const favoritesOnly = () =>
+    location.pathname === routes.favoritedAddressBook.href;
+
   useEffect(() => {
-    (async () => setTotalContactsCount(await countContacts(search)))();
-    fetch(maxContactsPerPage, 0);
+    (async () => {
+      const contactCount = await countContacts({
+        favoritesOnly: favoritesOnly(),
+      });
+
+      setTotalContactsCount(contactCount);
+    })();
+
+    fetchContacts(maxContactsPerPage, 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetch = async (limit: number, activePage: number) => {
-    const newContacts = await getAllContacts(limit, activePage, search);
+  const fetchContacts = async (maxContacts: number, activePage: number) => {
+    const newContacts = await getAllContacts({
+      limit: maxContacts,
+      offset: activePage - 1,
+      searchTerm: search,
+      favoritesOnly: favoritesOnly(),
+    });
 
     setContacts(newContacts);
   };
 
   const handlePageChange = (activePage: number) => {
     setActivePage(activePage);
-    fetch(maxContactsPerPage, activePage - 1);
+    fetchContacts(maxContactsPerPage, activePage);
   };
-  const handleChangeSelect = (value: number) => {
+
+  const handleChangeSelect = (maxContacts: number) => {
     setActivePage(1);
-    setMaxContactsPerPage(value);
-    fetch(value, 0);
+    setMaxContactsPerPage(maxContacts);
+    fetchContacts(maxContacts, 1);
   };
 
   const handleChangeInput = ({
@@ -43,17 +62,26 @@ const AddressBook = () => {
   }: ChangeEvent<HTMLInputElement>) => setSearch(value);
 
   const handleSubmit = async () => {
+    const contactCount = await countContacts({
+      searchTerm: search,
+      favoritesOnly: favoritesOnly(),
+    });
+
+    setTotalContactsCount(contactCount);
+
     setActivePage(1);
-    setTotalContactsCount(await countContacts(search));
-    fetch(maxContactsPerPage, 0);
+
+    fetchContacts(maxContactsPerPage, 1);
   };
 
   const handleClickFavorite = async (contact: IContact, favorited: boolean) => {
     const updatedContact: IContact = { ...contact, favorited };
-    await updateContact(contact.id, updatedContact);
+    await updateContact(updatedContact);
 
     setContacts(
-      contacts.map((c) => (c.id === contact.id ? updatedContact : c))
+      contacts.map((contact) =>
+        contact.id === updatedContact.id ? updatedContact : contact
+      )
     );
   };
 
@@ -64,7 +92,6 @@ const AddressBook = () => {
           <Input
             value={search}
             onChange={handleChangeInput}
-            name="search"
             placeholder="Search..."
           />
           <Button color="blue" attached="right" onClick={handleSubmit}>

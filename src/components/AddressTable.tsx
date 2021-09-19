@@ -8,14 +8,13 @@ import {
   Select,
   Table,
 } from "semantic-ui-react";
-import { IContact } from "../constants/types";
+import {
+  IContact,
+  ISortAction,
+  ISortState,
+  SortActionType,
+} from "../constants/types";
 import Input from "./shared/Input";
-
-const PAGINATION_OPTIONS = [
-  { key: "0", text: "15", value: "15" },
-  { key: "1", text: "30", value: "30" },
-  { key: "2", text: "45", value: "45" },
-];
 
 interface AddressTableProps {
   contacts: IContact[];
@@ -27,9 +26,22 @@ interface AddressTableProps {
   handleChangeSelect(value: number): void;
   handleClickFavorite(contact: IContact, favorite: boolean): void;
 }
-function exampleReducer(state: any, action: any) {
+
+const PAGINATION_OPTIONS = [
+  { key: "0", text: "15", value: "15" },
+  { key: "1", text: "30", value: "30" },
+  { key: "2", text: "45", value: "45" },
+];
+
+const initialReducerState: ISortState = {
+  column: undefined,
+  data: [],
+  direction: undefined,
+};
+
+function sortReducer(state: ISortState, action: ISortAction): ISortState {
   switch (action.type) {
-    case "CHANGE_SORT":
+    case SortActionType.ChangeSort:
       if (state.column === action.column) {
         return {
           ...state,
@@ -39,45 +51,39 @@ function exampleReducer(state: any, action: any) {
         };
       }
 
-      if (action.column === "favorited")
-        return {
-          column: action.column,
-          data: sortFavorited(state.data, [action.column]),
-          direction: "descending",
-        };
       return {
         column: action.column,
-        data: sort(state.data, action.column, action.direction),
+        data:
+          action.column === "favorited"
+            ? sortFavoritedContacts(state.data)
+            : sortContacts(state.data, action.column ?? "lastName"),
         direction: "descending",
       };
-    case "INITIALIZE":
+    case SortActionType.Initialize:
       return {
-        column: null,
+        column: undefined,
         data: action.data,
-        direction: null,
+        direction: undefined,
       };
     default:
       throw new Error();
   }
 }
 
-const sort = (contacts: any[], column: string, order: any) =>
-  contacts.sort(
-    (first, second) =>
-      first[column].localeCompare(second[column]) *
-      (order === "ascending" ? -1 : 1)
-  );
+const sortContacts = (
+  contacts: IContact[],
+  column: keyof Omit<IContact, "favorited">
+) =>
+  contacts.sort((first, second) => first[column].localeCompare(second[column]));
 
-const sortFavorited = (contacts: any[], order: any) => [
-  ...sort(
+const sortFavoritedContacts = (contacts: IContact[]) => [
+  ...sortContacts(
     contacts.filter((contact) => contact.favorited),
-    "lastName",
-    order
+    "lastName"
   ),
-  ...sort(
+  ...sortContacts(
     contacts.filter((contact) => !contact.favorited),
-    "lastName",
-    order
+    "lastName"
   ),
 ];
 
@@ -100,63 +106,53 @@ const AddressTable = ({
     { value }: DropdownItemProps
   ) => value && handleChangeSelect(+value);
 
-  const [state, dispatch] = useReducer(exampleReducer, {
-    column: null,
-    data: [],
-    direction: null,
-  });
-
-  const { column, data, direction } = state;
+  const [{ column, data, direction }, dispatch] = useReducer(
+    sortReducer,
+    initialReducerState
+  );
 
   useEffect(() => {
     dispatch({
-      type: "INITIALIZE",
-      column: null,
+      type: SortActionType.Initialize,
+      column: undefined,
       data: [...contacts],
-      direction: null,
+      direction: undefined,
     });
   }, [contacts]);
+
+  const renderHeaderCell = (
+    columnName: keyof Omit<IContact, "favorited">,
+    cellContent: string
+  ) => (
+    <Table.HeaderCell
+      sorted={column === columnName ? direction : undefined}
+      onClick={() =>
+        dispatch({ type: SortActionType.ChangeSort, column: columnName })
+      }
+      content={cellContent}
+    />
+  );
+
+  const renderCell = (cellContent: string, contactId: string) => (
+    <Table.Cell>
+      <Link to={`/kontakt/detalji/${contactId}`}>{cellContent}</Link>
+    </Table.Cell>
+  );
 
   return (
     <Table celled striped selectable sortable fixed>
       <Table.Header>
         <Table.Row>
-          <Table.HeaderCell
-            sorted={column === "firstName" ? direction : null}
-            onClick={() =>
-              dispatch({ type: "CHANGE_SORT", column: "firstName" })
-            }
-          >
-            First name
-          </Table.HeaderCell>
-          <Table.HeaderCell
-            sorted={column === "lastName" ? direction : null}
-            onClick={() =>
-              dispatch({ type: "CHANGE_SORT", column: "lastName" })
-            }
-          >
-            Last name
-          </Table.HeaderCell>
-          <Table.HeaderCell
-            sorted={column === "contact" ? direction : null}
-            onClick={() => dispatch({ type: "CHANGE_SORT", column: "contact" })}
-          >
-            Contact method
-          </Table.HeaderCell>
-          <Table.HeaderCell
-            sorted={column === "dateOfBirth" ? direction : null}
-            onClick={() =>
-              dispatch({ type: "CHANGE_SORT", column: "dateOfBirth" })
-            }
-          >
-            Date of birth
-          </Table.HeaderCell>
+          {renderHeaderCell("firstName", "First name")}
+          {renderHeaderCell("lastName", "Last name")}
+          {renderHeaderCell("contact", "Contact method")}
+          {renderHeaderCell("dateOfBirth", "Date of Birth")}
           <Table.HeaderCell
             width={1}
             className="favorite-column"
-            sorted={column === "favorited" ? direction : null}
+            sorted={column === "favorited" ? direction : undefined}
             onClick={() =>
-              dispatch({ type: "CHANGE_SORT", column: "favorited" })
+              dispatch({ type: SortActionType.ChangeSort, column: "favorited" })
             }
           >
             <Icon name="star outline" />
@@ -167,26 +163,13 @@ const AddressTable = ({
       <Table.Body>
         {data.map((contact: IContact) => (
           <Table.Row key={contact.id}>
-            <Table.Cell>
-              <Link to={`/kontakt/detalji/${contact.id}`}>
-                {contact.firstName}
-              </Link>
-            </Table.Cell>
-            <Table.Cell>
-              <Link to={`/kontakt/detalji/${contact.id}`}>
-                {contact.lastName}
-              </Link>
-            </Table.Cell>
-            <Table.Cell>
-              <Link to={`/kontakt/detalji/${contact.id}`}>
-                {`${contact.contact} (${contact.type})`}
-              </Link>
-            </Table.Cell>
-            <Table.Cell>
-              <Link to={`/kontakt/detalji/${contact.id}`}>
-                {new Date(contact.dateOfBirth).toLocaleDateString()}
-              </Link>
-            </Table.Cell>
+            {renderCell(contact.firstName, contact.id)}
+            {renderCell(contact.lastName, contact.id)}
+            {renderCell(`${contact.contact} (${contact.type})`, contact.id)}
+            {renderCell(
+              new Date(contact.dateOfBirth).toLocaleDateString(),
+              contact.id
+            )}
             <Table.Cell className="favorite-column">
               <Icon
                 name={contact.favorited ? "star" : "star outline"}

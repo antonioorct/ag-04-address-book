@@ -97,3 +97,7 @@ nav h3 {
   padding-top: 2rem;
   text-align: center;
 }
+
+.ui.table tfoot th {
+  overflow: initial !important;
+}
