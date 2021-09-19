@@ -43,6 +43,7 @@ const ContactForm = ({
       <Form.Group widths="equal">
         <Input
           name="firstName"
+          id="firstName"
           label="First name"
           onChange={handleChangeInput}
           value={state.firstName}
@@ -50,6 +51,7 @@ const ContactForm = ({
 
         <Input
           name="lastName"
+          id="lastName"
           label="Last name"
           onChange={handleChangeInput}
           value={state.lastName}
@@ -59,6 +61,7 @@ const ContactForm = ({
       <Input
         type="date"
         name="dateOfBirth"
+        id="dateOfBirth"
         label="Date of birth"
         value={state.dateOfBirth}
         onChange={handleChangeInput}
@@ -71,6 +74,7 @@ const ContactForm = ({
           options={CONTACT_OPTIONS}
           onChange={onChangeSelect}
           name="type"
+          id="type"
           value={state.type}
           placeholder="Select a contact type"
         />
@@ -80,6 +84,7 @@ const ContactForm = ({
           disabled={state.type === ""}
           value={state.contact}
           name="contact"
+          id="type"
           onChange={handleChangeInput}
         />
       </Form.Group>

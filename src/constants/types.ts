@@ -61,3 +61,8 @@ export interface IContactCountOptions {
   searchTerm?: string;
   favoritesOnly?: boolean;
 }
+
+export interface IUser {
+  isAuthenticated: boolean;
+  username: string;
+}

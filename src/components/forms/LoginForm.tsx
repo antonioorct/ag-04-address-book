@@ -28,6 +28,7 @@ const LoginForm = ({
     <Form onSubmit={onSubmit}>
       <Input
         name="username"
+        id="username"
         label="Username"
         onChange={handleChangeInput}
         value={state.username}
@@ -36,6 +37,7 @@ const LoginForm = ({
       <Input
         type="password"
         name="password"
+        id="password"
         label="Password"
         onChange={handleChangeInput}
         value={state.password}
