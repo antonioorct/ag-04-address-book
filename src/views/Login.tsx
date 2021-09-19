@@ -4,7 +4,8 @@ import { Container } from "semantic-ui-react";
 import LoginForm from "../components/forms/LoginForm";
 import routes from "../constants/routes";
 import { ILoginFormState } from "../constants/types";
-import LocalStorage from "../utils/LocalStorage";
+import { login } from "../slices/userSlice";
+import { useAppDispatch } from "../store";
 
 const initialLoginFormState: ILoginFormState = {
   username: "",
@@ -15,6 +16,8 @@ const VALID_USERNAME = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
 const VALID_PASSWORD = /^(?=.*\d)(?=.*[+\-!#$])[A-Za-z\d+\-!#$]{6,}$/;
 
 const Login = () => {
+  const dispatch = useAppDispatch();
+
   const [loginFormState, setLoginFormState] = useState(initialLoginFormState);
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -35,7 +38,7 @@ const Login = () => {
       resetForm();
       setLoginError("Invalid credentials");
     } else {
-      LocalStorage.setUsername(loginFormState.username);
+      dispatch(login(loginFormState.username));
       history.push(routes.addressBook.href);
     }
   };

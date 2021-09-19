@@ -24,9 +24,8 @@ const ContactDetails = () => {
     history.push(routes.addressBook.href);
   };
 
-  const handleClickUpdate = async () => {
+  const handleClickUpdate = async () =>
     history.push(routes.contact.href, { contact });
-  };
 
   const renderCard = (title: string, content: string) => (
     <Card>

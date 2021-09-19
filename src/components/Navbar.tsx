@@ -1,16 +1,14 @@
-import { Link, useHistory } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button, Container, Header } from "semantic-ui-react";
 import routes from "../constants/routes";
-import LocalStorage from "../utils/LocalStorage";
+import { logout } from "../slices/userSlice";
+import { useAppDispatch, useAppSelector } from "../store";
 
 const Navbar = () => {
-  const history = useHistory();
+  const { username } = useAppSelector((state) => state.user);
+  const dispatch = useAppDispatch();
 
-  const handleClickLogout = () => {
-    LocalStorage.removeUsername();
-
-    history.push(routes.login.href);
-  };
+  const handleClickLogout = () => dispatch(logout());
 
   return (
     <nav>
@@ -28,7 +26,7 @@ const Navbar = () => {
         <hr />
 
         <div>
-          <span>Welcome {LocalStorage.getUsername()}!</span>
+          <span>Welcome {username}!</span>
           <Button onClick={handleClickLogout}>Log out</Button>
         </div>
       </Container>

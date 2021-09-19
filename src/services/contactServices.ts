@@ -81,8 +81,11 @@ export const createContact = async (
   return newContactRef.key;
 };
 
-export const updateContact = async (contact: IContact): Promise<void> =>
+export const updateContact = async (contact: IContact): Promise<IContact> => {
   await set(contactDatabaseRef(contact.id), contact);
+
+  return contact;
+};
 
 export const deleteContact = async (id: string) =>
   await set(contactDatabaseRef(id), null);
