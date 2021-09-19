@@ -25,6 +25,8 @@ const Navbar = () => {
           </Link>
         </div>
 
+        <hr />
+
         <div>
           <span>Welcome {LocalStorage.getUsername()}!</span>
           <Button onClick={handleClickLogout}>Log out</Button>

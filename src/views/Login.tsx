@@ -24,10 +24,14 @@ const Login = () => {
     loginFormState.username.match(VALID_USERNAME) &&
     loginFormState.password.match(VALID_PASSWORD);
 
+  const isFormFilled = () =>
+    loginFormState.username !== "" && loginFormState.password !== "";
+
   const handleSubmit = () => {
     setLoginError(null);
 
-    if (!isFormValid()) {
+    if (!isFormFilled()) setLoginError("Please fill in the required fields");
+    else if (!isFormValid()) {
       resetForm();
       setLoginError("Invalid credentials");
     } else {
