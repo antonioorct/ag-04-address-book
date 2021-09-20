@@ -13,6 +13,10 @@ export const getAllContacts = async (
 ): Promise<IContact[]> => {
   const contacts = await get(contactsDatabaseRef);
 
+  console.log(!contacts.val());
+
+  if (!contacts.val()) return [];
+
   let contactArray: IContact[] = contactsToArray(contacts.val());
 
   if (!options) return contactArray;
@@ -37,6 +41,9 @@ export const countContacts = async (
   options?: IContactCountOptions
 ): Promise<number> => {
   const contacts = await get(contactsDatabaseRef);
+
+  if (!contacts.val()) return 0;
+
   let contactArray: IContact[] = contactsToArray(contacts.val());
 
   if (options) {
@@ -81,10 +88,13 @@ export const createContact = async (
   return newContactRef.key;
 };
 
-export const updateContact = async (contact: IContact): Promise<IContact> => {
-  await set(contactDatabaseRef(contact.id), contact);
+export const updateContact = async ({
+  id,
+  ...contact
+}: IContact): Promise<IContact> => {
+  await set(contactDatabaseRef(id), contact);
 
-  return contact;
+  return { id, ...contact };
 };
 
 export const deleteContact = async (id: string) =>

@@ -4,7 +4,7 @@ import { Container } from "semantic-ui-react";
 import ContactForm from "../components/forms/ContactForm";
 import routes from "../constants/routes";
 import { IContact, IContactFormState } from "../constants/types";
-import { createContact } from "../services/contactServices";
+import { createContact, updateContact } from "../services/contactServices";
 
 const initialContactFormState: IContactFormState = {
   firstName: "",
@@ -68,7 +68,9 @@ const Contact = () => {
 
     if (errMsg) setError(errMsg);
     else {
-      await createContact(contactFormState);
+      if (state) await updateContact({ ...state.contact, ...contactFormState });
+      else await createContact(contactFormState);
+
       history.push(routes.addressBook.href);
     }
   };
