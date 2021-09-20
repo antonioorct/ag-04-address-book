@@ -152,7 +152,13 @@ describe("address book", () => {
   });
 
   it("delete contact", () => {
+    cy.get("button").contains("Address book").click();
+
+    cy.wait(500);
+
     cy.get("a").contains("new@mail.com").click();
+
+    cy.wait(500);
 
     cy.get("button").contains("Delete").click();
   });
@@ -166,6 +172,8 @@ describe("address book", () => {
 
   it("delete other contact", () => {
     cy.get("a").contains("test@test.com").click();
+
+    cy.wait(500);
 
     cy.get("button").contains("Delete").click();
   });

@@ -16,7 +16,7 @@ const Navbar = () => {
         <div>
           <Header as="h3">Agency04 address book</Header>
           <Link to={routes.addressBook.href}>
-            <Button>Adresar</Button>
+            <Button>Address book</Button>
           </Link>
           <Link to={routes.favoritedAddressBook.href}>
             <Button>Favorites</Button>
